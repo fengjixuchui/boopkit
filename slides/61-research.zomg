@@ -1,0 +1,13 @@
+/!
+/!
+# Research Hidden Pids (Obfuscation)
+/!
+// Hiding a pid is harder than it seems.
+//
+// You should never trust ps(1), top(1), htop(1), etc
+//
+// eBPF can mutate any system call
+/!
+
+
+

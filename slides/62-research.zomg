@@ -1,0 +1,14 @@
+/!
+/!
+# Research (Bad Checksum)
+/!
+// Bad checksums can "pass" through any TCP service!
+//
+// Discovered by exploring TCP tracepoints
+//
+// AWS, Cloud Providers drop the packets*
+//
+// Boopkit now tries more than just bad checksum.
+//
+// A single SYN packet is VERY difficult because of network traversal.
+/!
